@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from './context/AuthContext';
+import AuthForm from './components/AuthForm';
 import TransactionForm from './components/TransactionForm';
 import TransactionList from './components/TransactionList';
 import Analytics from './components/Analytics';
@@ -6,6 +8,7 @@ import { transactionAPI, checkHealth } from './services/api';
 import './App.css';
 
 function App() {
+  const { user, logout, loading: authLoading } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -20,10 +23,15 @@ function App() {
     checkAPI();
   }, []);
 
-  // Fetch transactions on mount
+  // Fetch transactions only when user is authenticated
   useEffect(() => {
-    fetchTransactions();
-  }, []);
+    if (user) {
+      fetchTransactions();
+    } else {
+      setTransactions([]);
+      setLoading(false);
+    }
+  }, [user]);
 
   const fetchTransactions = async () => {
     try {
@@ -32,12 +40,8 @@ function App() {
       const data = await transactionAPI.getAll();
       setTransactions(data);
     } catch (err) {
-      setError('Failed to load transactions. Using offline mode.');
-      // Fallback to localStorage in case API is down
-      const saved = localStorage.getItem('transactions');
-      if (saved) {
-        setTransactions(JSON.parse(saved));
-      }
+      setError('Failed to load transactions');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -50,10 +54,6 @@ function App() {
       setError(null);
     } catch (err) {
       setError('Failed to add transaction');
-      // Fallback to local storage
-      const localTransaction = { ...transaction, id: Date.now() };
-      setTransactions(prev => [localTransaction, ...prev]);
-      localStorage.setItem('transactions', JSON.stringify([localTransaction, ...transactions]));
     }
   };
 
@@ -64,16 +64,38 @@ function App() {
       setError(null);
     } catch (err) {
       setError('Failed to delete transaction');
-      // Still update UI but show error
     }
   };
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="loading-container">
+        <div className="loader"></div>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+
+  // Show auth form if not logged in
+  if (!user) {
+    return <AuthForm />;
+  }
 
   return (
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <h1 className="app-title">Expense Tracker</h1>
-          <p className="app-subtitle">Manage Your Finances with Style</p>
+          <div className="header-main">
+            <div>
+              <h1 className="app-title">Expense Tracker</h1>
+              <p className="app-subtitle">Manage Your Finances with Style</p>
+            </div>
+            <div className="user-section">
+              <span className="user-name">👤 {user.name}</span>
+              <button onClick={logout} className="logout-btn">Logout</button>
+            </div>
+          </div>
           <div className="api-status">
             <span className={`status-indicator ${apiStatus}`}></span>
             <span className="status-text">

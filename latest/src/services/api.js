@@ -1,5 +1,10 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+// Get auth token
+const getToken = () => {
+  return localStorage.getItem('token');
+};
+
 // Helper function to handle API requests
 const handleResponse = async (response) => {
   const data = await response.json();
@@ -11,12 +16,23 @@ const handleResponse = async (response) => {
   return data;
 };
 
+// Get auth headers
+const getAuthHeaders = () => {
+  const token = getToken();
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  };
+};
+
 // Transaction API methods
 export const transactionAPI = {
   // Get all transactions
   getAll: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/transactions`);
+      const response = await fetch(`${API_BASE_URL}/transactions`, {
+        headers: getAuthHeaders()
+      });
       const data = await handleResponse(response);
       return data.data;
     } catch (error) {
@@ -28,7 +44,9 @@ export const transactionAPI = {
   // Get single transaction
   getById: async (id) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/transactions/${id}`);
+      const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
+        headers: getAuthHeaders()
+      });
       const data = await handleResponse(response);
       return data.data;
     } catch (error) {
@@ -42,9 +60,7 @@ export const transactionAPI = {
     try {
       const response = await fetch(`${API_BASE_URL}/transactions`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(transaction),
       });
       const data = await handleResponse(response);
@@ -60,9 +76,7 @@ export const transactionAPI = {
     try {
       const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: getAuthHeaders(),
         body: JSON.stringify(transaction),
       });
       const data = await handleResponse(response);
@@ -78,6 +92,7 @@ export const transactionAPI = {
     try {
       const response = await fetch(`${API_BASE_URL}/transactions/${id}`, {
         method: 'DELETE',
+        headers: getAuthHeaders(),
       });
       const data = await handleResponse(response);
       return data;
@@ -90,7 +105,9 @@ export const transactionAPI = {
   // Get analytics
   getAnalytics: async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/transactions/analytics/summary`);
+      const response = await fetch(`${API_BASE_URL}/transactions/analytics/summary`, {
+        headers: getAuthHeaders()
+      });
       const data = await handleResponse(response);
       return data.data;
     } catch (error) {

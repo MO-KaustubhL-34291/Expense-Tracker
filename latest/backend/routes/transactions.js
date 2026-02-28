@@ -7,8 +7,12 @@ import {
   getTransactionById,
   getAnalytics
 } from '../database/db.js';
+import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
+
+// Apply authentication to all routes
+router.use(authenticateToken);
 
 // Validation middleware
 const validateTransaction = (req, res, next) => {
@@ -44,14 +48,15 @@ const validateTransaction = (req, res, next) => {
   next();
 };
 
-// GET /api/transactions - Get all transactions
+// GET /api/transactions - Get all transactions for logged-in user
 router.get('/', (req, res) => {
   try {
-    const transactions = readTransactions();
+    const allTransactions = readTransactions();
+    const userTransactions = allTransactions.filter(t => t.userId === req.userId);
     res.json({
       success: true,
-      data: transactions,
-      count: transactions.length
+      data: userTransactions,
+      count: userTransactions.length
     });
   } catch (error) {
     res.status(500).json({
@@ -95,7 +100,11 @@ router.get('/:id', (req, res) => {
 // POST /api/transactions - Create new transaction
 router.post('/', validateTransaction, (req, res) => {
   try {
-    const transaction = addTransaction(req.body);
+    const transactionData = {
+      ...req.body,
+      userId: req.userId
+    };
+    const transaction = addTransaction(transactionData);
     res.status(201).json({
       success: true,
       data: transaction,

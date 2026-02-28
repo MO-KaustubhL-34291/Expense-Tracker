@@ -2,7 +2,9 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import transactionRoutes from './routes/transactions.js';
+import authRoutes from './routes/auth.js';
 import { initializeDatabase } from './database/db.js';
+import { initializeUsersDB } from './database/users.js';
 
 dotenv.config();
 
@@ -20,10 +22,12 @@ app.use((req, res, next) => {
   next();
 });
 
-// Initialize database
+// Initialize databases
 initializeDatabase();
+initializeUsersDB();
 
 // Routes
+app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 
 // Health check endpoint

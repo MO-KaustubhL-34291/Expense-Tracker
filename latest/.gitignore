@@ -25,6 +25,7 @@ dist-ssr
 
 # Backend database
 backend/database/transactions.json
+backend/database/users.json
 
 # Environment files
 .env
