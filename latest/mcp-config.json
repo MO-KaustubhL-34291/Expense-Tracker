@@ -1,0 +1,32 @@
+{
+  "name": "expense-tracker-mcp",
+  "version": "1.0.0",
+  "description": "Expense Tracker MCP Server Configuration",
+  "mcpServers": {
+    "expense-tracker": {
+      "command": "node",
+      "args": ["mcp-server.js"],
+      "env": {
+        "PORT": "3000",
+        "API_PORT": "5000",
+        "NODE_ENV": "production"
+      }
+    }
+  },
+  "deployment": {
+    "type": "fullstack",
+    "frontend": {
+      "build": "npm run build",
+      "serve": "dist",
+      "port": 3000
+    },
+    "backend": {
+      "start": "node backend/server.js",
+      "port": 5000
+    }
+  },
+  "health": {
+    "frontend": "http://localhost:3000",
+    "backend": "http://localhost:5000/api/health"
+  }
+}
